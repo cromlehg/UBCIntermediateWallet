@@ -9,8 +9,8 @@ const should = require('chai')
   .should();
 
 export default function (Token, IntermediateWallet, wallets) {
-  let token;
   let intermediatewallet;
+  let token;
 
   before(async function () {
     // Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -19,12 +19,14 @@ export default function (Token, IntermediateWallet, wallets) {
 
   beforeEach(async function () {
     token = await Token.new();
-    intermediatewallet = await IntermediateWallet.new();
+    await token.transferOwnership(wallets[3]);
 
-    await token.transferOwnership(wallets[0]);
+    intermediatewallet = await IntermediateWallet.new();
     await intermediatewallet.setWallet(wallets[2]);
+    await intermediatewallet.setToken(token.address);
     await intermediatewallet.transferOwnership(wallets[1]);
 
+    await token.registerCallback(intermediatewallet.address, {from: wallets[3]});
   });
 
   it ('should return correct wallets address after setting wallet', async function () {
@@ -42,23 +44,35 @@ export default function (Token, IntermediateWallet, wallets) {
   it ('should send ether to wallet', async function () {
     const investment = ether(1);
     const pre = web3.eth.getBalance(wallets[2]);
-    await intermediatewallet.sendTransaction({value: investment, from: wallets[3]});
+    await intermediatewallet.sendTransaction({value: investment, from: wallets[4]});
     const post = web3.eth.getBalance(wallets[2]);
     post.minus(pre).should.be.bignumber.equal(investment);
   });
 
-  it ('should send tokens to wallet ', async function () {
+  it ('should retrieve tokens if sender is owner', async function () {
     const tokensInvestment = tokens(100);
-    await token.mint(intermediatewallet.address, tokensInvestment, {from: wallets[0]});
+    await token.mint(intermediatewallet.address, tokensInvestment, {from: wallets[3]});
     await intermediatewallet.retrieveTokens(wallets[4], token.address, {from: wallets[1]});
     const balance = await token.balanceOf(wallets[4]);  
     balance.should.be.bignumber.equal(tokensInvestment);
   });
 
-  it ('should not send tokens to wallet if sender is not owner', async function () {
+  it ('should not retrieve tokens if sender is not owner', async function () {
     const tokensInvestment = tokens(100);
-    await token.mint(intermediatewallet.address, tokensInvestment, {from: wallets[0]});
-    await intermediatewallet.retrieveTokens(wallets[4], token.address, {from: wallets[3]}).should.be.rejectedWith(EVMRevert);
+    await token.mint(intermediatewallet.address, tokensInvestment, {from: wallets[3]});
+    await intermediatewallet.retrieveTokens(wallets[4], token.address, {from: wallets[4]}).should.be.rejectedWith(EVMRevert);
   }); 
+
+  it ('should send tokens from customer to wallet and write info to txs()', async function () {
+    const tokensInvestment = tokens(100);
+    await token.mint(wallets[6], tokens(200), {from: wallets[3]});
+    await token.transfer(intermediatewallet.address, tokensInvestment, {from: wallets[6]});
+
+    const x = await intermediatewallet.txs(0);
+    console.log("Transaction: " + x);
+
+    const balance = await token.balanceOf(wallets[2]);
+    balance.should.be.bignumber.equal(tokensInvestment);
+  });
 
 }

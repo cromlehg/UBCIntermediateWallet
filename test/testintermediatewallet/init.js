@@ -8,8 +8,7 @@ const should = require('chai')
   .use(require('chai-bignumber')(web3.BigNumber))
   .should();
 
-export default function (Token, IntermediateWallet, wallets) {
-  let token;
+export default function (IntermediateWallet, wallets) {
   let intermediatewallet;
 
   before(async function () {
@@ -18,11 +17,7 @@ export default function (Token, IntermediateWallet, wallets) {
   });
 
   beforeEach(async function () {
-    token = await Token.new();
     intermediatewallet = await IntermediateWallet.new();
-
-    await token.transferOwnership(wallets[0]);
-
   });
 
   it ('should init wallet as owner', async function () {
@@ -30,5 +25,10 @@ export default function (Token, IntermediateWallet, wallets) {
     const initwallet = await intermediatewallet.wallet();
     assert.equal(owner, initwallet);
   }); 
+
+  it ('should init token as 0x2D3E7D4870a51b918919E7B851FE19983E4c38d5', async function () {
+    const initToken = await intermediatewallet.token();
+    assert.equal(initToken, 0x2D3E7D4870a51b918919E7B851FE19983E4c38d5);
+  });
 
 }

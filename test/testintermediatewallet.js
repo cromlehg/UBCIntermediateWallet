@@ -2,13 +2,18 @@ import ether from './helpers/ether';
 import tokens from './helpers/tokens';
 
 import maintest from './testintermediatewallet/intermediatewallet';
-import basic from './testintermediatewallet/basic';
+import init from './testintermediatewallet/init';
+import ownable from './testintermediatewallet/ownable';
 
-const token = artifacts.require('MainToken.sol');
 const intermediatewallet = artifacts.require('IntermediateWallet.sol');
+const token = artifacts.require('TestToken.sol');
 
 contract('Init test', function (accounts) {
-  basic(token, intermediatewallet, accounts);
+  init(intermediatewallet, accounts);
+});
+
+contract('Ownable test', function (accounts) {
+  ownable(intermediatewallet, accounts);
 });
 
 contract('IntermediateWallet test', function (accounts) {
