@@ -20,15 +20,9 @@ export default function (IntermediateWallet, wallets) {
     intermediatewallet = await IntermediateWallet.new();
   });
 
-  it ('should init wallet as owner', async function () {
-    const owner = await intermediatewallet.owner();
+  it ('should init wallet as 0x0B18Ed2b002458e297ed1722bc5599E98AcEF9a5', async function () {
     const initwallet = await intermediatewallet.wallet();
-    assert.equal(owner, initwallet);
+    assert.equal(initwallet, 0x0B18Ed2b002458e297ed1722bc5599E98AcEF9a5);
   }); 
-
-  it ('should init token as 0x2D3E7D4870a51b918919E7B851FE19983E4c38d5', async function () {
-    const initToken = await intermediatewallet.token();
-    assert.equal(initToken, 0x2D3E7D4870a51b918919E7B851FE19983E4c38d5);
-  });
 
 }
